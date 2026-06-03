@@ -231,11 +231,6 @@ async function displayStatus() {
   }
 }
 
-/**
- * @function  main
- * @summary   Main entry point executing migration command based on arguments
- * @returns   {void}
- */
 async function main() {
   const command = process.argv[2];
   try {
@@ -259,4 +254,17 @@ async function main() {
   }
 }
 
-main();
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  getDbClient,
+  schemaMigrationsTableExists,
+  getAppliedMigrations,
+  getLocalMigrations,
+  migrateUp,
+  migrateDown,
+  displayStatus,
+  main,
+};
