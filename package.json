@@ -1,0 +1,16 @@
+{
+  "name": "pizza-joint",
+  "version": "1.0.0",
+  "description": "Scaffolded repository for Pizza Joint website",
+  "main": "backend/server.js",
+  "scripts": {
+    "migrate:up": "node scripts/migrate.js up",
+    "migrate:down": "node scripts/migrate.js down",
+    "migrate:status": "node scripts/migrate.js status"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "pg": "^8.11.5"
+  }
+}
