@@ -12,13 +12,33 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+// LOCAL DEV: uses DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+// PRODUCTION (Vercel): uses DATABASE_URL (set in Vercel dashboard,
+// points to a hosted Postgres instance — Neon/Supabase/Railway)
+let poolConfig = {};
+
+if (process.env.DATABASE_URL) {
+  poolConfig.connectionString = process.env.DATABASE_URL;
+  
+  // CHANGED FOR VERCEL: Enable SSL connection if the connection URL requests it or in production
+  if (process.env.DATABASE_URL.includes('sslmode=require') || 
+      process.env.DATABASE_URL.includes('ssl=true') || 
+      process.env.NODE_ENV === 'production') {
+    poolConfig.ssl = {
+      rejectUnauthorized: false,
+    };
+  }
+} else {
+  poolConfig = {
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT || '5432', 10),
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+  };
+}
+
+const pool = new Pool(poolConfig);
 
 /**
  * @function  executeQuery
