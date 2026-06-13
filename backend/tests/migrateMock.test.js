@@ -118,11 +118,13 @@ async function runTests() {
 
   // Test 4: Verify migrateDown
   console.log('Testing: migrateDown()...');
-  // At this stage, V001 is applied
   mockQueryCalls = [];
-  await migrate.migrateDown();
+  const initialApplied = mockAppliedMigrations.length;
+  for (let i = 0; i < initialApplied; i++) {
+    await migrate.migrateDown();
+  }
   
-  // Verify V001 was rolled back
+  // Verify all were rolled back
   assert.strictEqual(mockAppliedMigrations.length, 0, 'No migrations should remain applied after rollback');
   assert.ok(mockQueryCalls.some(c => c.sqlText.includes('DROP TABLE IF EXISTS schema_migrations')), 'V001 down script should be executed');
   console.log('PASSED\n');

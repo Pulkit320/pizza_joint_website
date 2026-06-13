@@ -29,3 +29,10 @@ lerna-debug.log*
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Seeding Credentials
+docs/DUMMY_CREDENTIALS.md
+
+# R history files
+*.Rhistory
+

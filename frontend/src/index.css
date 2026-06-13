@@ -1,0 +1,96 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-brand-darker text-brand-light font-sans antialiased selection:bg-brand-primary selection:text-brand-dark;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(31, 40, 51, 0.15) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(255, 179, 0, 0.05) 0%, transparent 40%);
+    background-attachment: fixed;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-brand-darker;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-brand-card rounded-full border-2 border-brand-darker hover:bg-brand-primary/50 transition-colors;
+  }
+}
+
+@layer components {
+  /* Glassmorphism Card Style */
+  .glass-card {
+    @apply bg-brand-card/30 backdrop-blur-md border border-white/5 rounded-2xl shadow-xl transition-all duration-300;
+  }
+
+  .glass-card-hover {
+    @apply hover:bg-brand-card/50 hover:border-brand-primary/20 hover:shadow-brand-primary/5 hover:shadow-2xl transition-all duration-300;
+  }
+
+  /* Premium Buttons */
+  .btn-primary {
+    @apply px-6 py-3 rounded-xl bg-gradient-to-r from-brand-primary to-brand-secondary text-brand-dark font-semibold text-sm shadow-lg hover:shadow-brand-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-brand-light font-semibold text-sm hover:bg-white/10 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-danger {
+    @apply px-6 py-3 rounded-xl bg-brand-legend/10 border border-brand-legend/30 text-brand-legend font-semibold text-sm hover:bg-brand-legend/20 hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  /* Form Elements */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl bg-brand-darker border border-white/10 text-brand-light focus:outline-none focus:border-brand-primary/50 focus:ring-1 focus:ring-brand-primary/50 transition-all duration-200 placeholder:text-brand-light/30;
+  }
+
+  .label-text {
+    @apply text-xs font-semibold uppercase tracking-wider text-brand-light/60 mb-2 block;
+  }
+}
+
+/* Star Rating Animation */
+.star-rating-spin {
+  transition: transform 0.2s ease-in-out;
+}
+.star-rating-spin:hover {
+  transform: scale(1.2) rotate(5deg);
+}
+
+/* Shimmer animation for loading states */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+.shimmer::after {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.05) 20%,
+    rgba(255, 255, 255, 0.1) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+  content: '';
+}
