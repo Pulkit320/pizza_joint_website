@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/api/cron/tier-check", "destination": "/api/cron/tier-check.js" },
+    { "source": "/api/cron/employee-of-week", "destination": "/api/cron/employee-of-week.js" },
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/tier-check",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/employee-of-week",
+      "schedule": "0 3 * * 1"
+    }
+  ]
+}
