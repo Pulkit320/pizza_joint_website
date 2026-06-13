@@ -1,27 +1,23 @@
 /**
  * @file        server.js
  * @module      Server
- * @description Main entry point for the Express backend server.
+ * @description Main entry point for the Express backend server (local development).
+ *              Imports the configured app from app.js and starts the HTTP listener.
+ *              // app.js: the Express app itself — used by both local dev (server.js)
+ *              // and production (api/index.js on Vercel)
  * @layer       config
  * @author      Architect Agent
  * @version     1.0.0
  */
 
-const express = require('express');
 const dotenv = require('dotenv');
+// Import the centralized app configuration
+const app = require('./src/app');
 
 // Load environment variables
 dotenv.config();
 
-const app = express();
 const port = process.env.PORT || 3000;
-
-app.use(express.json());
-
-// Basic health check route
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
-});
 
 /**
  * @function  startServer
@@ -40,6 +36,9 @@ function startServer() {
   }
 }
 
-startServer();
+// CHANGED FOR VERCEL: Only call listen() if run directly. Otherwise, export the app for serverless or test run.
+if (require.main === module) {
+  startServer();
+}
 
 module.exports = app;
