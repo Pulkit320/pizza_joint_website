@@ -8,5 +8,5 @@
  * @version     1.0.0
  */
 
-const app = require('../backend/src/app');
+const app = require('../src/app');
 module.exports = app;

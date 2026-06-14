@@ -21,6 +21,14 @@ dotenv.config();
 
 const app = express();
 
+// Middleware to strip Vercel Services routePrefix if present
+app.use((req, res, next) => {
+  if (req.url.startsWith('/_/backend')) {
+    req.url = req.url.slice('/_/backend'.length);
+  }
+  next();
+});
+
 app.use(express.json());
 
 const authRoutes = require('./routes/authRoutes');

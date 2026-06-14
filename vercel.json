@@ -1,17 +1,22 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
-  "outputDirectory": "frontend/dist",
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ],
+  "experimentalServices": {
+    "frontend": {
+      "root": "frontend",
+      "routePrefix": "/",
+      "framework": "vite"
+    },
+    "backend": {
+      "root": "backend",
+      "routePrefix": "/_/backend"
+    }
+  },
   "crons": [
     {
-      "path": "/api/cron/tier-check",
+      "path": "/_/backend/api/cron/tier-check",
       "schedule": "0 2 * * *"
     },
     {
-      "path": "/api/cron/employee-of-week",
+      "path": "/_/backend/api/cron/employee-of-week",
       "schedule": "0 3 * * 1"
     }
   ]

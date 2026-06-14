@@ -13,7 +13,7 @@ These variables must be manually configured in the Vercel project settings dashb
 | `DATABASE_URL` | The full PostgreSQL connection string to the hosted database. Must include database credentials. | **Yes** | `postgresql://<user>:<password>@<host>:<port>/<db>?sslmode=require` | `postgresql://postgres:pizza@localhost:5432/pizza_joint_db?sslmode=disable` |
 | `JWT_SECRET` | Secret key used to sign and verify JSON Web Tokens (JWT) for customer and staff sessions. | **Yes** | A long, randomly generated secure string. | `super_secret_dev_pizza_token_key_12345` |
 | `CRON_SECRET` | A secure bearer token used to authenticate scheduled Vercel Cron jobs and prevent unauthorized execution. | **Yes** | A high-entropy random API token. | Any string (e.g., `local-cron-secret-key-999`) |
-| `VITE_API_BASE_URL` | The base URL for the backend API consumed by Axios in the React frontend. | **Yes** | `/api/v1` (uses relative path for same-origin routing) | `http://localhost:3000/api/v1` |
+| `VITE_API_BASE_URL` | The base URL for the backend API consumed by Axios in the React frontend. | **Yes** | `/_/backend/api/v1` (uses relative path for Vercel Services routing) | `http://localhost:3000/api/v1` |
 | `NODE_ENV` | Identifies the current environment execution mode. | No (Vercel defaults this) | `production` | `development` |
 | `PORT` | Local server port binding. Not used by Vercel serverless. | No | *N/A* | `3000` |
 | `LOYALTY_POINTS_PER_RUPEE` | Points earned per rupee spent (default `0.1` = 1 point per 10 rupees). | No | `0.1` | `0.1` |

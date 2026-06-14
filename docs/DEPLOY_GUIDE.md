@@ -33,7 +33,7 @@ This guide provides step-by-step instructions for deploying the Pizza Joint appl
 | `DATABASE_URL` | `postgresql://...` | The connection URL copied in Step 1. Ensure `sslmode=require` is present. |
 | `JWT_SECRET` | *[Your Secure Key]* | A long, secure random string. |
 | `CRON_SECRET` | *[Your Secret Token]* | A secure API key to protect cron endpoints. |
-| `VITE_API_BASE_URL` | `/api/v1` | Instructs the React Axios client to use relative same-origin routing. |
+| `VITE_API_BASE_URL` | `/_/backend/api/v1` | Instructs the React Axios client to use Vercel Services relative routing. |
 
 4. Click **Deploy**. (The first deploy might succeed but the application will not be functional until migrations and seeds are executed).
 
@@ -69,7 +69,7 @@ You can execute the migrations and seeds from your local command line by pointin
    - Weekly Employee of the Week: `0 3 * * 1` (3:00 AM every Monday)
 4. To test the cron triggers manually, send a POST request to the cron routes with the authorization header:
    ```bash
-   curl -X POST https://your-production-url.vercel.app/api/cron/tier-check \
+   curl -X POST https://your-production-url.vercel.app/_/backend/api/cron/tier-check \
      -H "Authorization: Bearer YOUR_CRON_SECRET"
    ```
 

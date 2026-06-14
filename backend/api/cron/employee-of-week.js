@@ -7,7 +7,7 @@
  * @version     1.0.0
  */
 
-const eotwService = require('../../backend/src/services/eotwService');
+const eotwService = require('../../src/services/eotwService');
 
 module.exports = async (req, res) => {
   // Verify authorization

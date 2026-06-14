@@ -7,8 +7,8 @@
  * @version     1.0.0
  */
 
-const loyaltyService = require('../../backend/src/services/loyaltyService');
-const tokenBlacklist = require('../../backend/src/utils/tokenBlacklist');
+const loyaltyService = require('../../src/services/loyaltyService');
+const tokenBlacklist = require('../../src/utils/tokenBlacklist');
 
 module.exports = async (req, res) => {
   // Verify authorization
