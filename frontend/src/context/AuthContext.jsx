@@ -280,6 +280,7 @@ export function AuthProvider({ children }) {
     ? {
         id: state.staffAuth.userId,
         email: state.staffAuth.email,
+        name: state.staffAuth.name,
         firstName: state.staffAuth.firstName,
         lastName: state.staffAuth.lastName,
         role: state.staffAuth.role,
@@ -289,6 +290,7 @@ export function AuthProvider({ children }) {
       ? {
           id: state.customerAuth.userId,
           email: state.customerAuth.email,
+          name: state.customerAuth.name,
           firstName: state.customerAuth.firstName,
           lastName: state.customerAuth.lastName,
           role: 'customer',

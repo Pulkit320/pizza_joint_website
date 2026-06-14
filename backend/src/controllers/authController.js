@@ -21,8 +21,14 @@ const ErrorCodes = require('../utils/errorCodes');
  */
 async function register(req, res, next) {
   try {
-    const { firstName, lastName, email, password, dateOfBirth, referredBy } = req.body;
+    let { firstName, lastName, email, password, dateOfBirth, referredBy, name } = req.body;
     
+    if (name && (!firstName || !lastName)) {
+      const parts = name.trim().split(/\s+/);
+      firstName = parts[0] || '';
+      lastName = parts.slice(1).join(' ') || '';
+    }
+
     if (!firstName || !lastName || !email || !password) {
       const error = new Error('Missing required fields.');
       error.statusCode = 400;
