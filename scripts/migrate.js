@@ -23,13 +23,26 @@ const MIGRATIONS_DIR = path.join(__dirname, '../backend/migrations');
  * @throws    {Error} When connection fails
  */
 async function getDbClient() {
-  const client = new Client({
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    database: process.env.DB_NAME,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-  });
+  let config = {};
+  if (process.env.DATABASE_URL) {
+    config.connectionString = process.env.DATABASE_URL;
+    if (process.env.DATABASE_URL.includes('sslmode=require') || 
+        process.env.DATABASE_URL.includes('ssl=true') || 
+        process.env.NODE_ENV === 'production') {
+      config.ssl = {
+        rejectUnauthorized: false,
+      };
+    }
+  } else {
+    config = {
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      database: process.env.DB_NAME,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+    };
+  }
+  const client = new Client(config);
   await client.connect();
   return client;
 }

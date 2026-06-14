@@ -7,6 +7,7 @@
     "migrate:up": "node scripts/migrate.js up",
     "migrate:down": "node scripts/migrate.js down",
     "migrate:status": "node scripts/migrate.js status",
+    "db:init": "node scripts/db-init.js",
     "seed": "node scripts/seed.js",
     "seed:fresh": "node scripts/seed.js --fresh"
   },
