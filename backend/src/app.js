@@ -11,6 +11,8 @@
  * @version     1.0.0
  */
 
+// app.js: the Express app itself — used by both local dev (server.js)
+// and production (api/index.js on Vercel)
 const express = require('express');
 const dotenv = require('dotenv');
 

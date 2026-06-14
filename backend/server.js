@@ -12,6 +12,8 @@
 
 const dotenv = require('dotenv');
 // Import the centralized app configuration
+// app.js: the Express app itself — used by both local dev (server.js)
+// and production (api/index.js on Vercel)
 const app = require('./src/app');
 
 // Load environment variables

@@ -36,3 +36,7 @@ docs/DUMMY_CREDENTIALS.md
 # R history files
 *.Rhistory
 
+# Frontend Build & Vercel
+frontend/dist/
+.vercel/
+

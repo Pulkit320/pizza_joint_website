@@ -46,16 +46,18 @@ The routing rules defined in `/vercel.json` are organized as follows:
 
 The repository version history has been updated to reflect the full evolution of features and deployment prep. The current commit history is clean and structured:
 
-*   **Tag: `v2.0.0`**: Created a release tag marking the completed Pizza Joint application feature set prior to deployment restructuring.
+*   **Tag: `v2.0.0` (commit `acfcbc4`)**: Created a release tag marking the completed Pizza Joint application feature set prior to deployment restructuring.
 *   **Deployment Commits**:
-    1.  `chore: restructure backend for serverless deployment`
-    2.  `feat: add token blacklist DB table (replaces in-memory store)`
-    3.  `feat: add Vercel cron endpoints for tier check and EOTW calc`
-    4.  `chore: configure environment variables for hosted database`
-    5.  `chore: update frontend to use environment-based API URL`
-    6.  `chore: add vercel.json deployment configuration`
-    7.  `docs: add deployment audit, env vars reference, and deploy guide`
-*   **Tag: `v2.1.0-deploy-ready`**: Created an annotated rollback/release tag representing the finalized, verified deployment configuration.
+    1.  `5e7a863` — `chore: restructure backend for serverless deployment`
+    2.  `af9280f` — `feat: add token blacklist DB table (replaces in-memory store)`
+    3.  `be080ef` — `feat: add Vercel cron endpoints for tier check and EOTW calc`
+    4.  `5a97b8d` — `chore: configure environment variables for hosted database`
+    5.  `4307f2f` — `chore: update frontend to use environment-based API URL`
+    6.  `27ab58c` — `chore: add vercel.json deployment configuration`
+    7.  `b1039ca` — `docs: add deployment audit, env vars reference, and deploy guide`
+    8.  `5100287` — `docs: update review submission report with deployment audit details`
+    9.  `[latest]` — `chore: finalize vercel configuration and align cron task responses` (current HEAD)
+*   **Tag: `v2.1.0-deploy-ready`**: Created an annotated rollback/release tag representing the finalized, verified deployment configuration, pointing to the latest commit.
 
 ---
 

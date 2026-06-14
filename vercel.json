@@ -1,9 +1,8 @@
 {
-  "version": 2,
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
   "rewrites": [
-    { "source": "/api/cron/tier-check", "destination": "/api/cron/tier-check.js" },
-    { "source": "/api/cron/employee-of-week", "destination": "/api/cron/employee-of-week.js" },
-    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "crons": [

@@ -12,9 +12,8 @@ const tokenBlacklist = require('../../backend/src/utils/tokenBlacklist');
 
 module.exports = async (req, res) => {
   // Verify authorization
-  const authHeader = req.headers.authorization;
-  if (!authHeader || authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  if (req.headers.authorization !== `Bearer ${process.env.CRON_SECRET}`) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
   try {
