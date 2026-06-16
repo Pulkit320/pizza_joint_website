@@ -51,8 +51,9 @@ apiService.interceptors.response.use(
 
     if (error.response) {
       // Server responded with non-2xx status
-      errorCode = error.response.data?.code || `HTTP_${error.response.status}`;
-      humanReadableMessage = error.response.data?.message || error.response.statusText || humanReadableMessage;
+      const responseData = error.response.data;
+      errorCode = responseData?.error?.code || responseData?.code || `HTTP_${error.response.status}`;
+      humanReadableMessage = responseData?.error?.message || responseData?.message || error.response.statusText || humanReadableMessage;
     } else if (error.request) {
       // Request made but no response received
       errorCode = 'NETWORK_ERROR';

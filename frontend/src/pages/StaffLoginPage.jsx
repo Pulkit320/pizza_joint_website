@@ -54,9 +54,9 @@ function StaffLoginPage() {
 
     try {
       const res = await staffLogin(email, password);
-      if (res.success) {
-        loginStaff(res.data.user, res.data.token);
-        const path = getRedirectPath(res.data.user.role);
+      if (res.user && res.token) {
+        loginStaff(res.user, res.token);
+        const path = getRedirectPath(res.user.role);
         navigate(path);
       }
     } catch (err) {

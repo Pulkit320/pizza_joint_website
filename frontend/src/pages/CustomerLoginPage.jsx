@@ -38,8 +38,8 @@ function CustomerLoginPage() {
     try {
       if (activeTab === 'login') {
         const res = await customerLogin(email, password);
-        if (res.success) {
-          loginCustomer(res.data.user, res.data.token);
+        if (res.user && res.token) {
+          loginCustomer(res.user, res.token);
           navigate('/account');
         }
       } else {

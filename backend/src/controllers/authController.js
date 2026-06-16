@@ -72,11 +72,6 @@ async function register(req, res, next) {
  */
 async function customerLogin(req, res, next) {
   try {
-    // TEMP DEBUG — remove before final commit
-    console.log('[DEBUG] Login endpoint hit:', req.path);
-    console.log('[DEBUG] Content-Type header:', req.headers['content-type']);
-    console.log('[DEBUG] Raw request body:', JSON.stringify(req.body));
-
     const { email, password } = req.body;
     
     if (!email || !password) {
@@ -107,11 +102,6 @@ async function customerLogin(req, res, next) {
  */
 async function staffLogin(req, res, next) {
   try {
-    // TEMP DEBUG — remove before final commit
-    console.log('[DEBUG] Login endpoint hit:', req.path);
-    console.log('[DEBUG] Content-Type header:', req.headers['content-type']);
-    console.log('[DEBUG] Raw request body:', JSON.stringify(req.body));
-
     const { email, password } = req.body;
     
     if (!email || !password) {

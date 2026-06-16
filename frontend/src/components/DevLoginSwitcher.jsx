@@ -31,14 +31,14 @@ function DevLoginSwitcher() {
     try {
       if (type === 'customer') {
         const res = await customerLogin(email, password);
-        if (res.success) {
-          loginCustomer(res.data.user, res.data.token);
+        if (res.user && res.token) {
+          loginCustomer(res.user, res.token);
           navigate(redirectPath);
         }
       } else {
         const res = await staffLogin(email, password);
-        if (res.success) {
-          loginStaff(res.data.user, res.data.token);
+        if (res.user && res.token) {
+          loginStaff(res.user, res.token);
           navigate(redirectPath);
         }
       }
