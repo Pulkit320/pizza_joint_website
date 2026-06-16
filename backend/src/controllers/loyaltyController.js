@@ -20,7 +20,18 @@ const ErrorCodes = require('../utils/errorCodes');
  */
 async function getCustomerLoyalty(req, res, next) {
   try {
-    const customerId = req.user.id;
+    const customerId = req.params.id || req.user.id;
+    
+    // Authorization check: only admin/manager can query other customer's details
+    if (req.params.id && req.params.id !== req.user.id) {
+      if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+        const error = new Error('Access forbidden.');
+        error.statusCode = 403;
+        error.code = ErrorCodes.FORBIDDEN;
+        throw error;
+      }
+    }
+
     const details = await loyaltyService.getCustomerLoyalty(customerId);
     res.json({
       success: true,
@@ -41,7 +52,18 @@ async function getCustomerLoyalty(req, res, next) {
  */
 async function getLedgerHistory(req, res, next) {
   try {
-    const customerId = req.user.id;
+    const customerId = req.params.id || req.user.id;
+
+    // Authorization check: only admin/manager can query other customer's details
+    if (req.params.id && req.params.id !== req.user.id) {
+      if (req.user.role !== 'admin' && req.user.role !== 'manager') {
+        const error = new Error('Access forbidden.');
+        error.statusCode = 403;
+        error.code = ErrorCodes.FORBIDDEN;
+        throw error;
+      }
+    }
+
     const page = parseInt(req.query.page || '1', 10);
     const limit = parseInt(req.query.limit || '10', 10);
 

@@ -19,5 +19,6 @@ router.post('/staff/login', authController.staffLogin);
 router.post('/login', authController.login);
 router.post('/logout', authenticateToken, authController.logout);
 router.get('/me', authenticateToken, authController.me);
+router.put('/me', authenticateToken, authController.updateMe);
 
 module.exports = router;

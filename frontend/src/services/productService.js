@@ -103,11 +103,8 @@ export async function getProducts() {
     const res = await apiService.get('/products');
     return res.data.products;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: getProducts failed, falling back to mock data');
-      return MOCK_PRODUCTS;
-    }
-    throw err;
+    console.warn('apiService: getProducts failed, falling back to mock data', err);
+    return MOCK_PRODUCTS;
   }
 }
 
@@ -123,15 +120,12 @@ export async function getProductById(id) {
     const res = await apiService.get(`/products/${id}`);
     return res.data.product;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: getProductById(${id}) failed, falling back to mock data`);
-      const product = MOCK_PRODUCTS.find((p) => p.id === Number(id));
-      if (!product) {
-        throw { code: 'PRODUCT_NOT_FOUND', message: 'The requested product does not exist.' };
-      }
-      return product;
+    console.warn(`apiService: getProductById(${id}) failed, falling back to mock data`, err);
+    const product = MOCK_PRODUCTS.find((p) => p.id === Number(id));
+    if (!product) {
+      throw { code: 'PRODUCT_NOT_FOUND', message: 'The requested product does not exist.' };
     }
-    throw err;
+    return product;
   }
 }
 
@@ -146,11 +140,8 @@ export async function getPopularProducts() {
     const res = await apiService.get('/products/popular');
     return res.data.products;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: getPopularProducts failed, falling back to mock data');
-      return MOCK_PRODUCTS.filter((p) => p.isPopular);
-    }
-    throw err;
+    console.warn('apiService: getPopularProducts failed, falling back to mock data', err);
+    return MOCK_PRODUCTS.filter((p) => p.isPopular);
   }
 }
 

@@ -84,10 +84,41 @@ class AuthService {
       }
 
       await client.query('COMMIT');
-      
+
+      // Generate a JWT for the registered customer so the frontend can immediately log them in
+      const jti = crypto.randomUUID();
+      const secret = process.env.JWT_SECRET || 'super_secret_dev_pizza_token_key_12345';
+      const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+
+      const token = jwt.sign(
+        {
+          userId: customer.id,
+          id: customer.id,
+          email: customer.email,
+          name: `${customer.first_name} ${customer.last_name}`,
+          role: 'customer',
+          tier: 'dough',
+          loyaltyBalance: 0,
+          jti
+        },
+        secret,
+        { expiresIn }
+      );
+
       // Remove password hash from response object
       delete customer.password_hash;
-      return customer;
+      return {
+        token,
+        user: {
+          id: customer.id,
+          email: customer.email,
+          firstName: customer.first_name,
+          lastName: customer.last_name,
+          role: 'customer',
+          tier: 'dough',
+          loyaltyBalance: 0
+        }
+      };
     } catch (err) {
       await client.query('ROLLBACK');
       throw err;
@@ -133,6 +164,7 @@ class AuthService {
     const token = jwt.sign(
       {
         userId: customer.id,
+        id: customer.id,
         email: customer.email,
         name: `${customer.first_name} ${customer.last_name}`,
         role: 'customer',
@@ -193,6 +225,7 @@ class AuthService {
     const token = jwt.sign(
       {
         userId: employee.id,
+        id: employee.id,
         email: employee.email,
         name: `${employee.first_name} ${employee.last_name}`,
         role: employee.role,
@@ -314,6 +347,41 @@ class AuthService {
       console.error('Failed to check blacklisted token:', err);
     }
     return false;
+  }
+
+  /**
+   * @function  updateCustomerUser
+   * @summary   Updates customer profile details
+   */
+  async updateCustomerUser(id, { firstName, lastName, email }) {
+    // Check if email already exists in customers or employees
+    const existingCust = await authModel.findCustomerByEmail(email);
+    const existingEmp = await authModel.findEmployeeByEmail(email);
+    if ((existingCust && existingCust.id !== id) || existingEmp) {
+      const error = new Error('Email is already registered.');
+      error.statusCode = 409;
+      error.code = ErrorCodes.CONFLICT;
+      throw error;
+    }
+
+    return await authModel.updateCustomer(id, { firstName, lastName, email });
+  }
+
+  /**
+   * @function  updateEmployeeUser
+   * @summary   Updates employee profile details
+   */
+  async updateEmployeeUser(id, { firstName, lastName, email }) {
+    const existingCust = await authModel.findCustomerByEmail(email);
+    const existingEmp = await authModel.findEmployeeByEmail(email);
+    if (existingCust || (existingEmp && existingEmp.id !== id)) {
+      const error = new Error('Email is already registered.');
+      error.statusCode = 409;
+      error.code = ErrorCodes.CONFLICT;
+      throw error;
+    }
+
+    return await authModel.updateEmployee(id, { firstName, lastName, email });
   }
 }
 

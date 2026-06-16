@@ -54,7 +54,10 @@ localStorage.setItem('mock_users', JSON.stringify(DEFAULT_USERS));
 export async function register(name, email, password) {
   try {
     const res = await apiService.post('/auth/register', { name, email, password });
-    return res.data;
+    return {
+      user: res.data.data.user,
+      token: res.data.data.token
+    };
   } catch (err) {
     if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
       console.warn('apiService: register failed, falling back to mock registration');
@@ -105,7 +108,10 @@ export async function register(name, email, password) {
 export async function customerLogin(email, password) {
   try {
     const res = await apiService.post('/auth/customer/login', { email, password });
-    return res.data;
+    return {
+      user: res.data.data.user,
+      token: res.data.data.token
+    };
   } catch (err) {
     if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
       console.warn('apiService: customerLogin failed, checking mock accounts');
@@ -117,11 +123,8 @@ export async function customerLogin(email, password) {
       }
 
       return {
-        success: true,
-        data: {
-          user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, preferences: user.preferences, tier: 'dough', loyaltyBalance: 0 },
-          token: `mock-jwt-token-${user.id}`
-        }
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, preferences: user.preferences, tier: 'dough', loyaltyBalance: 0 },
+        token: `mock-jwt-token-${user.id}`
       };
     }
     throw err;
@@ -139,7 +142,10 @@ export async function customerLogin(email, password) {
 export async function staffLogin(email, password) {
   try {
     const res = await apiService.post('/auth/staff/login', { email, password });
-    return res.data;
+    return {
+      user: res.data.data.user,
+      token: res.data.data.token
+    };
   } catch (err) {
     if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
       console.warn('apiService: staffLogin failed, checking mock accounts');
@@ -151,11 +157,8 @@ export async function staffLogin(email, password) {
       }
 
       return {
-        success: true,
-        data: {
-          user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, preferences: user.preferences, isAdmin: user.role === 'admin' || user.role === 'manager' },
-          token: `mock-jwt-token-${user.id}`
-        }
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, phone: user.phone, preferences: user.preferences, isAdmin: user.role === 'admin' || user.role === 'manager' },
+        token: `mock-jwt-token-${user.id}`
       };
     }
     throw err;
@@ -202,7 +205,7 @@ export async function logout() {
 export async function getMe() {
   try {
     const res = await apiService.get('/auth/me');
-    return res.data.user;
+    return res.data.data;
   } catch (err) {
     if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
       console.warn('apiService: getMe failed, matching session token');
@@ -225,6 +228,40 @@ export async function getMe() {
   }
 }
 
+/**
+ * @function  updateMe
+ * @summary   Updates current user's profile details
+ * @param     {object} profileData - Updated fields (name, email)
+ * @returns   {Promise<object>} Updated user record
+ */
+export async function updateMe(profileData) {
+  try {
+    const res = await apiService.put('/auth/me', profileData);
+    return res.data.data;
+  } catch (err) {
+    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
+      console.warn('apiService: updateMe failed, updating mock database');
+      const token = localStorage.getItem('customer_token') || localStorage.getItem('staff_token') || localStorage.getItem('token');
+      if (!token || !token.startsWith('mock-jwt-token-')) {
+        throw { code: 'UNAUTHORIZED', message: 'No active session.' };
+      }
+      const userId = Number(token.replace('mock-jwt-token-', ''));
+      const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
+      const userIdx = users.findIndex(u => u.id === userId);
+      if (userIdx === -1) {
+        throw { code: 'USER_NOT_FOUND', message: 'User not found.' };
+      }
+      users[userIdx] = {
+        ...users[userIdx],
+        ...profileData,
+      };
+      localStorage.setItem('mock_users', JSON.stringify(users));
+      return users[userIdx];
+    }
+    throw err;
+  }
+}
+
 const authService = {
   register,
   customerLogin,
@@ -232,6 +269,7 @@ const authService = {
   login,
   logout,
   getMe,
+  updateMe,
 };
 
 export default authService;

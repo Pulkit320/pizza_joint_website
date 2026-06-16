@@ -86,10 +86,50 @@ async function createCustomer(customerData, client) {
   return result.rows[0];
 }
 
+/**
+ * @function  updateCustomer
+ * @summary   Updates customer details in the database
+ * @param     {string}  id            - Customer ID (UUID)
+ * @param     {object}  customerData  - Customer updated fields
+ * @returns   {Promise<object>} The updated customer record
+ */
+async function updateCustomer(id, customerData) {
+  const { firstName, lastName, email } = customerData;
+  const sqlText = `
+    UPDATE customers
+    SET first_name = $1, last_name = $2, email = $3
+    WHERE id = $4
+    RETURNING id, email, first_name, last_name, date_of_birth, referred_by, created_at;
+  `;
+  const result = await executeQuery(sqlText, [firstName, lastName, email, id]);
+  return result.rows[0] || null;
+}
+
+/**
+ * @function  updateEmployee
+ * @summary   Updates employee details in the database
+ * @param     {string}  id            - Employee ID (UUID)
+ * @param     {object}  employeeData  - Employee updated fields
+ * @returns   {Promise<object>} The updated employee record
+ */
+async function updateEmployee(id, employeeData) {
+  const { firstName, lastName, email } = employeeData;
+  const sqlText = `
+    UPDATE employees
+    SET first_name = $1, last_name = $2, email = $3
+    WHERE id = $4
+    RETURNING id, email, first_name, last_name, role, created_at;
+  `;
+  const result = await executeQuery(sqlText, [firstName, lastName, email, id]);
+  return result.rows[0] || null;
+}
+
 module.exports = {
   findCustomerByEmail,
   findEmployeeByEmail,
   findCustomerById,
   findEmployeeById,
   createCustomer,
+  updateCustomer,
+  updateEmployee,
 };

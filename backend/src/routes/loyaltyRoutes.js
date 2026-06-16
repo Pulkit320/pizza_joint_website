@@ -13,8 +13,8 @@ const { authenticateToken, requireRole, requireAdminRole } = require('../middlew
 
 const router = express.Router();
 
-router.get('/account', authenticateToken, requireRole('customer'), loyaltyController.getCustomerLoyalty);
-router.get('/ledger', authenticateToken, requireRole('customer'), loyaltyController.getLedgerHistory);
+router.get('/account/:id?', authenticateToken, loyaltyController.getCustomerLoyalty);
+router.get('/ledger/:id?', authenticateToken, loyaltyController.getLedgerHistory);
 router.post('/redeem', authenticateToken, requireRole('customer'), loyaltyController.redeemPoints);
 
 // Admin specific loyalty routes

@@ -11,7 +11,7 @@ import axios from 'axios';
 // Base URL comes from environment — localhost in dev, the deployed
 // backend URL in production. Never hardcode this.
 const apiService = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '/api/v1',
+  baseURL: import.meta.env.VITE_API_BASE_URL || (import.meta.env.MODE === 'production' ? '/_/backend/api/v1' : '/api/v1'),
   headers: {
     'Content-Type': 'application/json',
   },

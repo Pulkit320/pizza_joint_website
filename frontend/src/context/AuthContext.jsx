@@ -8,6 +8,8 @@
 
 import React, { createContext, useReducer, useEffect, useContext } from 'react';
 import axios from 'axios';
+import apiService from '../services/apiService';
+import authService from '../services/authService';
 
 // Create context
 export const AuthContext = createContext(null);
@@ -126,13 +128,24 @@ function authReducer(state, action) {
     case 'UPDATE_USER':
       return {
         ...state,
-        customerAuth: {
-          ...state.customerAuth,
-          ...action.payload,
-          firstName: action.payload.firstName || state.customerAuth.firstName,
-          lastName: action.payload.lastName || state.customerAuth.lastName,
-          name: action.payload.name || `${action.payload.firstName || state.customerAuth.firstName} ${action.payload.lastName || state.customerAuth.lastName}`,
-        },
+        customerAuth: state.customerAuth.isLoggedIn
+          ? {
+              ...state.customerAuth,
+              ...action.payload,
+              firstName: action.payload.firstName || state.customerAuth.firstName,
+              lastName: action.payload.lastName || state.customerAuth.lastName,
+              name: action.payload.name || `${action.payload.firstName || state.customerAuth.firstName} ${action.payload.lastName || state.customerAuth.lastName}`,
+            }
+          : state.customerAuth,
+        staffAuth: state.staffAuth.isLoggedIn
+          ? {
+              ...state.staffAuth,
+              ...action.payload,
+              firstName: action.payload.firstName || state.staffAuth.firstName,
+              lastName: action.payload.lastName || state.staffAuth.lastName,
+              name: action.payload.name || `${action.payload.firstName || state.staffAuth.firstName} ${action.payload.lastName || state.staffAuth.lastName}`,
+            }
+          : state.staffAuth,
       };
     default:
       return state;
@@ -229,7 +242,7 @@ export function AuthProvider({ children }) {
 
     // Optional: notify backend of logout
     if (token) {
-      axios.post('http://localhost:3000/api/v1/auth/logout', {}, {
+      apiService.post('/auth/logout', {}, {
         headers: { Authorization: `Bearer ${token}` }
       }).catch((e) => console.warn('Failed to log out customer on backend:', e.message));
     }
@@ -258,7 +271,7 @@ export function AuthProvider({ children }) {
 
     // Optional: notify backend of logout
     if (token) {
-      axios.post('http://localhost:3000/api/v1/auth/logout', {}, {
+      apiService.post('/auth/logout', {}, {
         headers: { Authorization: `Bearer ${token}` }
       }).catch((e) => console.warn('Failed to log out staff on backend:', e.message));
     }
@@ -268,8 +281,30 @@ export function AuthProvider({ children }) {
    * @function  updateUser
    * @summary   Updates the current authenticated customer's local details
    */
-  function updateUser(updatedFields) {
-    dispatch({ type: 'UPDATE_USER', payload: updatedFields });
+  async function updateUser(updatedFields) {
+    try {
+      const updatedUser = await authService.updateMe({
+        name: updatedFields.name,
+        email: updatedFields.email,
+        phone: updatedFields.phone,
+        preferences: updatedFields.preferences
+      });
+
+      dispatch({
+        type: 'UPDATE_USER',
+        payload: {
+          name: updatedUser.name || `${updatedUser.firstName} ${updatedUser.lastName}`,
+          firstName: updatedUser.firstName,
+          lastName: updatedUser.lastName,
+          email: updatedUser.email,
+          phone: updatedFields.phone,
+          preferences: updatedFields.preferences
+        }
+      });
+    } catch (err) {
+      console.error('Failed to update user profile in database:', err);
+      dispatch({ type: 'UPDATE_USER', payload: updatedFields });
+    }
   }
 
   // Derive legacy states to keep existing components functional without immediate refactoring

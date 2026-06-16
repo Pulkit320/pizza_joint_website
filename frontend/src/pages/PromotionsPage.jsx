@@ -7,7 +7,8 @@
  */
 
 import React, { useState } from 'react';
-import { Tag, Clipboard, Check, Gift, ShoppingCart, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Tag, Clipboard, Check, Gift, ShoppingCart, Sparkles, ArrowRight } from 'lucide-react';
 
 /**
  * @function  PromotionsPage

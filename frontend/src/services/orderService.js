@@ -83,63 +83,60 @@ export async function createOrder(orderData) {
     const res = await apiService.post('/orders', orderData);
     return res.data.order;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: createOrder failed, placing order in mock database');
-      const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
+    console.warn('apiService: createOrder failed, placing order in mock database', err);
+    const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
+    
+    const newOrder = {
+      id: orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 5001,
+      customerId: 101, // Logged in customer mock ID
+      customerName: "John Doe",
+      items: orderData.items,
+      subtotal: orderData.subtotal,
+      pointsRedeemed: orderData.pointsRedeemed || 0,
+      loyaltyDiscount: orderData.loyaltyDiscount || 0,
+      total: orderData.total,
+      status: "received",
+      createdAt: new Date().toISOString(),
+      employeeId: 201, // Default assign Marco
+      employeeName: "Marco",
+      employeePhoto: "/employee_week.png",
+      elapsedMinutes: 0
+    };
+
+    orders.unshift(newOrder); // Add to beginning
+    localStorage.setItem('mock_orders', JSON.stringify(orders));
+
+    // Subtract loyalty points if redeemed, and add earned points (10% of total)
+    const mockAccount = JSON.parse(localStorage.getItem('mock_loyalty') || '{}');
+    if (mockAccount.pointsBalance !== undefined) {
+      mockAccount.pointsBalance = Math.max(0, mockAccount.pointsBalance - newOrder.pointsRedeemed);
+      const earned = Math.floor(newOrder.total * 0.1);
+      mockAccount.pointsBalance += earned;
       
-      const newOrder = {
-        id: orders.length > 0 ? Math.max(...orders.map(o => o.id)) + 1 : 5001,
-        customerId: 101, // Logged in customer mock ID
-        customerName: "John Doe",
-        items: orderData.items,
-        subtotal: orderData.subtotal,
-        pointsRedeemed: orderData.pointsRedeemed || 0,
-        loyaltyDiscount: orderData.loyaltyDiscount || 0,
-        total: orderData.total,
-        status: "received",
-        createdAt: new Date().toISOString(),
-        employeeId: 201, // Default assign Marco
-        employeeName: "Marco",
-        employeePhoto: "/employee_week.png",
-        elapsedMinutes: 0
-      };
-
-      orders.unshift(newOrder); // Add to beginning
-      localStorage.setItem('mock_orders', JSON.stringify(orders));
-
-      // Subtract loyalty points if redeemed, and add earned points (10% of total)
-      const mockAccount = JSON.parse(localStorage.getItem('mock_loyalty') || '{}');
-      if (mockAccount.pointsBalance !== undefined) {
-        mockAccount.pointsBalance = Math.max(0, mockAccount.pointsBalance - newOrder.pointsRedeemed);
-        const earned = Math.floor(newOrder.total * 0.1);
-        mockAccount.pointsBalance += earned;
-        
-        // Add to ledger
-        const ledger = JSON.parse(localStorage.getItem('mock_loyalty_ledger') || '[]');
-        if (newOrder.pointsRedeemed > 0) {
-          ledger.unshift({
-            id: Date.now(),
-            date: new Date().toISOString().split('T')[0],
-            eventType: 'Redemption',
-            pointsDelta: -newOrder.pointsRedeemed,
-            balanceAfter: mockAccount.pointsBalance - earned // ledger snapshot before addition
-          });
-        }
+      // Add to ledger
+      const ledger = JSON.parse(localStorage.getItem('mock_loyalty_ledger') || '[]');
+      if (newOrder.pointsRedeemed > 0) {
         ledger.unshift({
-          id: Date.now() + 1,
+          id: Date.now(),
           date: new Date().toISOString().split('T')[0],
-          eventType: 'Earned (Order)',
-          pointsDelta: earned,
-          balanceAfter: mockAccount.pointsBalance
+          eventType: 'Redemption',
+          pointsDelta: -newOrder.pointsRedeemed,
+          balanceAfter: mockAccount.pointsBalance - earned // ledger snapshot before addition
         });
-        
-        localStorage.setItem('mock_loyalty', JSON.stringify(mockAccount));
-        localStorage.setItem('mock_loyalty_ledger', JSON.stringify(ledger));
       }
-
-      return newOrder;
+      ledger.unshift({
+        id: Date.now() + 1,
+        date: new Date().toISOString().split('T')[0],
+        eventType: 'Earned (Order)',
+        pointsDelta: earned,
+        balanceAfter: mockAccount.pointsBalance
+      });
+      
+      localStorage.setItem('mock_loyalty', JSON.stringify(mockAccount));
+      localStorage.setItem('mock_loyalty_ledger', JSON.stringify(ledger));
     }
-    throw err;
+
+    return newOrder;
   }
 }
 
@@ -155,35 +152,32 @@ export async function getOrderById(id) {
     const res = await apiService.get(`/orders/${id}`);
     return res.data.order;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: getOrderById(${id}) failed, fetching from mock database`);
-      const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
-      const order = orders.find(o => o.id === Number(id));
-      if (!order) {
-        throw { code: 'ORDER_NOT_FOUND', message: 'Order could not be found.' };
-      }
-      
-      // Update elapsed time for simulation
-      const diffMs = Date.now() - new Date(order.createdAt).getTime();
-      const elapsedMinutes = Math.floor(diffMs / 60000);
-      order.elapsedMinutes = elapsedMinutes;
-      
-      // Auto-advance status for pending orders in mockup mode
-      if (order.status !== 'completed' && order.status !== 'cancelled') {
-        if (elapsedMinutes > 15) {
-          order.status = 'completed';
-        } else if (elapsedMinutes > 10) {
-          order.status = 'delivery';
-        } else if (elapsedMinutes > 5) {
-          order.status = 'oven';
-        } else if (elapsedMinutes > 2) {
-          order.status = 'prep';
-        }
-      }
-
-      return order;
+    console.warn(`apiService: getOrderById(${id}) failed, fetching from mock database`, err);
+    const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
+    const order = orders.find(o => o.id === Number(id));
+    if (!order) {
+      throw { code: 'ORDER_NOT_FOUND', message: 'Order could not be found.' };
     }
-    throw err;
+    
+    // Update elapsed time for simulation
+    const diffMs = Date.now() - new Date(order.createdAt).getTime();
+    const elapsedMinutes = Math.floor(diffMs / 60000);
+    order.elapsedMinutes = elapsedMinutes;
+    
+    // Auto-advance status for pending orders in mockup mode
+    if (order.status !== 'completed' && order.status !== 'cancelled') {
+      if (elapsedMinutes > 15) {
+        order.status = 'completed';
+      } else if (elapsedMinutes > 10) {
+        order.status = 'delivery';
+      } else if (elapsedMinutes > 5) {
+        order.status = 'oven';
+      } else if (elapsedMinutes > 2) {
+        order.status = 'prep';
+      }
+    }
+
+    return order;
   }
 }
 
@@ -200,23 +194,20 @@ export async function getOrderHistory(page = 1, limit = 5) {
     const res = await apiService.get('/orders/history', { params: { page, limit } });
     return res.data;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: getOrderHistory failed, fetching from mock database');
-      const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
-      
-      // Filter for customer 101 only
-      const customerOrders = orders.filter(o => o.customerId === 101);
-      const startIndex = (page - 1) * limit;
-      const paginatedOrders = customerOrders.slice(startIndex, startIndex + limit);
-      
-      return {
-        orders: paginatedOrders,
-        totalCount: customerOrders.length,
-        totalPages: Math.ceil(customerOrders.length / limit),
-        currentPage: page
-      };
-    }
-    throw err;
+    console.warn('apiService: getOrderHistory failed, fetching from mock database', err);
+    const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
+    
+    // Filter for customer 101 only
+    const customerOrders = orders.filter(o => o.customerId === 101);
+    const startIndex = (page - 1) * limit;
+    const paginatedOrders = customerOrders.slice(startIndex, startIndex + limit);
+    
+    return {
+      orders: paginatedOrders,
+      totalCount: customerOrders.length,
+      totalPages: Math.ceil(customerOrders.length / limit),
+      currentPage: page
+    };
   }
 }
 
@@ -233,20 +224,17 @@ export async function updateOrderStatus(id, status) {
     const res = await apiService.put(`/orders/${id}/status`, { status });
     return res.data.order;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: updateOrderStatus(${id}, ${status}) failed, updating mock database`);
-      const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
-      const orderIdx = orders.findIndex(o => o.id === Number(id));
-      
-      if (orderIdx === -1) {
-        throw { code: 'ORDER_NOT_FOUND', message: 'Order could not be found.' };
-      }
-
-      orders[orderIdx].status = status;
-      localStorage.setItem('mock_orders', JSON.stringify(orders));
-      return orders[orderIdx];
+    console.warn(`apiService: updateOrderStatus(${id}, ${status}) failed, updating mock database`, err);
+    const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
+    const orderIdx = orders.findIndex(o => o.id === Number(id));
+    
+    if (orderIdx === -1) {
+      throw { code: 'ORDER_NOT_FOUND', message: 'Order could not be found.' };
     }
-    throw err;
+
+    orders[orderIdx].status = status;
+    localStorage.setItem('mock_orders', JSON.stringify(orders));
+    return orders[orderIdx];
   }
 }
 

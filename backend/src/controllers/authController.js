@@ -72,6 +72,11 @@ async function register(req, res, next) {
  */
 async function customerLogin(req, res, next) {
   try {
+    // TEMP DEBUG — remove before final commit
+    console.log('[DEBUG] Login endpoint hit:', req.path);
+    console.log('[DEBUG] Content-Type header:', req.headers['content-type']);
+    console.log('[DEBUG] Raw request body:', JSON.stringify(req.body));
+
     const { email, password } = req.body;
     
     if (!email || !password) {
@@ -102,6 +107,11 @@ async function customerLogin(req, res, next) {
  */
 async function staffLogin(req, res, next) {
   try {
+    // TEMP DEBUG — remove before final commit
+    console.log('[DEBUG] Login endpoint hit:', req.path);
+    console.log('[DEBUG] Content-Type header:', req.headers['content-type']);
+    console.log('[DEBUG] Raw request body:', JSON.stringify(req.body));
+
     const { email, password } = req.body;
     
     if (!email || !password) {
@@ -198,9 +208,32 @@ async function me(req, res, next) {
     let userDetails = null;
 
     if (role === 'customer') {
-      userDetails = await authModel.findCustomerById(userId);
+      const rawUser = await authModel.findCustomerById(userId);
+      if (rawUser) {
+        userDetails = {
+          id: rawUser.id,
+          email: rawUser.email,
+          firstName: rawUser.first_name,
+          lastName: rawUser.last_name,
+          name: `${rawUser.first_name} ${rawUser.last_name}`,
+          dateOfBirth: rawUser.date_of_birth,
+          referredBy: rawUser.referred_by,
+          createdAt: rawUser.created_at
+        };
+      }
     } else {
-      userDetails = await authModel.findEmployeeById(userId);
+      const rawUser = await authModel.findEmployeeById(userId);
+      if (rawUser) {
+        userDetails = {
+          id: rawUser.id,
+          email: rawUser.email,
+          firstName: rawUser.first_name,
+          lastName: rawUser.last_name,
+          name: `${rawUser.first_name} ${rawUser.last_name}`,
+          role: rawUser.role,
+          createdAt: rawUser.created_at
+        };
+      }
     }
 
     if (!userDetails) {
@@ -210,13 +243,86 @@ async function me(req, res, next) {
       throw error;
     }
 
-    // Attach role to the user details output structure
     res.json({
       success: true,
       data: {
         ...userDetails,
         role,
       },
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * @function  updateMe
+ * @summary   Express route handler to update the current authenticated user's profile details
+ * @param     {object}  req  - Express request object
+ * @param     {object}  res  - Express response object
+ * @param     {function} next - Express next function
+ * @returns   {Promise<void>}
+ */
+async function updateMe(req, res, next) {
+  try {
+    if (!req.user) {
+      const error = new Error('Unauthorized.');
+      error.statusCode = 401;
+      error.code = ErrorCodes.UNAUTHORIZED;
+      throw error;
+    }
+
+    const role = req.user.role;
+    const userId = req.user.userId || req.user.id;
+    const { name, email } = req.body;
+
+    if (!email) {
+      const error = new Error('Email is required.');
+      error.statusCode = 400;
+      error.code = ErrorCodes.BAD_REQUEST;
+      throw error;
+    }
+
+    let firstName = '';
+    let lastName = '';
+    if (name) {
+      const parts = name.trim().split(/\s+/);
+      firstName = parts[0] || '';
+      lastName = parts.slice(1).join(' ') || '';
+    }
+
+    let updatedUser = null;
+    if (role === 'customer') {
+      const rawUser = await authService.updateCustomerUser(userId, { firstName, lastName, email });
+      updatedUser = {
+        id: rawUser.id,
+        email: rawUser.email,
+        firstName: rawUser.first_name,
+        lastName: rawUser.last_name,
+        name: `${rawUser.first_name} ${rawUser.last_name}`,
+        dateOfBirth: rawUser.date_of_birth,
+        referredBy: rawUser.referred_by,
+        createdAt: rawUser.created_at
+      };
+    } else {
+      const rawUser = await authService.updateEmployeeUser(userId, { firstName, lastName, email });
+      updatedUser = {
+        id: rawUser.id,
+        email: rawUser.email,
+        firstName: rawUser.first_name,
+        lastName: rawUser.last_name,
+        name: `${rawUser.first_name} ${rawUser.last_name}`,
+        role: rawUser.role,
+        createdAt: rawUser.created_at
+      };
+    }
+
+    res.json({
+      success: true,
+      data: {
+        ...updatedUser,
+        role
+      }
     });
   } catch (error) {
     next(error);
@@ -230,4 +336,5 @@ module.exports = {
   login,
   logout,
   me,
+  updateMe,
 };

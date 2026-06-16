@@ -221,6 +221,55 @@ async function runTests() {
     assert.strictEqual(adminCheckChefRes.status, 403);
     console.log('✔ TEST 8: requireAdminRole allows manager access but blocks chef.');
 
+    // -------------------------------------------------------------
+    // TEST 9: PUT /auth/me Updates Customer Profile Details
+    // -------------------------------------------------------------
+    const customerLoginRes2 = await request('POST', '/auth/customer/login', {
+      email: 'john@customer.com',
+      password: 'password123',
+    });
+    const customerToken2 = customerLoginRes2.body.data.token;
+
+    const updateMeRes = await request('PUT', '/auth/me', {
+      name: 'Johnathan Doe-Smith',
+      email: 'johnathan.smith@customer.com'
+    }, customerToken2);
+    assert.strictEqual(updateMeRes.status, 200);
+    assert.strictEqual(updateMeRes.body.data.name, 'Johnathan Doe-Smith');
+    assert.strictEqual(updateMeRes.body.data.email, 'johnathan.smith@customer.com');
+
+    const meResAfterUpdate = await request('GET', '/auth/me', null, customerToken2);
+    assert.strictEqual(meResAfterUpdate.status, 200);
+    assert.strictEqual(meResAfterUpdate.body.data.name, 'Johnathan Doe-Smith');
+    assert.strictEqual(meResAfterUpdate.body.data.email, 'johnathan.smith@customer.com');
+    console.log('✔ TEST 9: PUT /auth/me updates customer profile and persists it.');
+
+    // -------------------------------------------------------------
+    // TEST 10: GET /loyalty/account and GET /loyalty/ledger
+    // -------------------------------------------------------------
+    const loyaltyAccountRes = await request('GET', '/loyalty/account', null, customerToken2);
+    assert.strictEqual(loyaltyAccountRes.status, 200);
+    assert.strictEqual(loyaltyAccountRes.body.data.currentTier, 'crust');
+
+    const loyaltyAccountManagerRes = await request('GET', `/loyalty/account/${customerId}`, null, managerToken);
+    assert.strictEqual(loyaltyAccountManagerRes.status, 200);
+
+    const anotherCustId = 'c0000000-0000-0000-0000-000000000002';
+    await pool.query(
+      `INSERT INTO customers (id, first_name, last_name, email, password_hash)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [anotherCustId, 'Jane', 'Smith', 'jane@customer.com', passwordHash]
+    );
+    const anotherLoginRes = await request('POST', '/auth/customer/login', {
+      email: 'jane@customer.com',
+      password: 'password123',
+    });
+    const anotherToken = anotherLoginRes.body.data.token;
+
+    const loyaltyAccountForbiddenRes = await request('GET', `/loyalty/account/${customerId}`, null, anotherToken);
+    assert.strictEqual(loyaltyAccountForbiddenRes.status, 403);
+    console.log('✔ TEST 10: Loyalty account endpoints check roles and parameter correctly.');
+
     console.log('\nAll new auth separation tests passed successfully!');
     await cleanDb();
     server.close(() => {
