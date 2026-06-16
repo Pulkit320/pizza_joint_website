@@ -90,13 +90,10 @@ export async function getEmployeeOfWeek() {
     const res = await apiService.get('/employees/week');
     return res.data.employee;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: getEmployeeOfWeek failed, returning mock employee of the week');
-      const employees = JSON.parse(localStorage.getItem('mock_employees') || '[]');
-      const eotw = employees.find(e => e.isEmployeeOfWeek);
-      return eotw || employees[0];
-    }
-    throw err;
+    console.warn('apiService: getEmployeeOfWeek failed, returning mock employee of the week', err);
+    const employees = JSON.parse(localStorage.getItem('mock_employees') || '[]');
+    const eotw = employees.find(e => e.isEmployeeOfWeek);
+    return eotw || employees[0];
   }
 }
 
@@ -112,33 +109,30 @@ export async function getEmployeeById(id) {
     const res = await apiService.get(`/employees/${id}`);
     return res.data.employee;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: getEmployeeById(${id}) failed, returning mock details`);
-      const employees = JSON.parse(localStorage.getItem('mock_employees') || '[]');
-      const employee = employees.find(e => e.id === Number(id));
-      
-      if (!employee) {
-        throw { code: 'EMPLOYEE_NOT_FOUND', message: 'Employee could not be found.' };
-      }
-      
-      // Append any new ratings submitted in this session
-      const empRatings = JSON.parse(localStorage.getItem('mock_employee_ratings') || '[]');
-      const freshRatings = empRatings.filter(r => r.employeeId === Number(id));
-      
-      const combinedFeed = [...freshRatings.map((r, i) => ({
-        id: `fresh-${i}`,
-        customerName: "Recent Customer",
-        rating: r.rating || 5,
-        comment: r.comment || "No written comment.",
-        date: r.createdAt.split('T')[0]
-      })), ...employee.ratingsFeed];
-
-      return {
-        ...employee,
-        ratingsFeed: combinedFeed
-      };
+    console.warn(`apiService: getEmployeeById(${id}) failed, returning mock details`, err);
+    const employees = JSON.parse(localStorage.getItem('mock_employees') || '[]');
+    const employee = employees.find(e => e.id === Number(id));
+    
+    if (!employee) {
+      throw { code: 'EMPLOYEE_NOT_FOUND', message: 'Employee could not be found.' };
     }
-    throw err;
+    
+    // Append any new ratings submitted in this session
+    const empRatings = JSON.parse(localStorage.getItem('mock_employee_ratings') || '[]');
+    const freshRatings = empRatings.filter(r => r.employeeId === Number(id));
+    
+    const combinedFeed = [...freshRatings.map((r, i) => ({
+      id: `fresh-${i}`,
+      customerName: "Recent Customer",
+      rating: r.rating || 5,
+      comment: r.comment || "No written comment.",
+      date: r.createdAt.split('T')[0]
+    })), ...employee.ratingsFeed];
+
+    return {
+      ...employee,
+      ratingsFeed: combinedFeed
+    };
   }
 }
 

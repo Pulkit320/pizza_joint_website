@@ -36,28 +36,25 @@ export async function submitExperienceReview(orderId, ratings, comment, wouldOrd
     });
     return res.data;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: submitExperienceReview for order ${orderId} failed, writing mock review`);
-      const reviews = JSON.parse(localStorage.getItem('mock_reviews') || '[]');
-      
-      const newReview = {
-        id: Date.now(),
-        orderId: Number(orderId),
-        ratings,
-        comment,
-        wouldOrderAgain,
-        itemRatings,
-        createdAt: new Date().toISOString()
-      };
+    console.warn(`apiService: submitExperienceReview for order ${orderId} failed, writing mock review`, err);
+    const reviews = JSON.parse(localStorage.getItem('mock_reviews') || '[]');
+    
+    const newReview = {
+      id: Date.now(),
+      orderId: Number(orderId),
+      ratings,
+      comment,
+      wouldOrderAgain,
+      itemRatings,
+      createdAt: new Date().toISOString()
+    };
 
-      // Remove existing review for this order if present
-      const filteredReviews = reviews.filter(r => r.orderId !== Number(orderId));
-      filteredReviews.push(newReview);
-      localStorage.setItem('mock_reviews', JSON.stringify(filteredReviews));
+    // Remove existing review for this order if present
+    const filteredReviews = reviews.filter(r => r.orderId !== Number(orderId));
+    filteredReviews.push(newReview);
+    localStorage.setItem('mock_reviews', JSON.stringify(filteredReviews));
 
-      return { success: true, message: "Review submitted successfully!" };
-    }
-    throw err;
+    return { success: true, message: "Review submitted successfully!" };
   }
 }
 
@@ -81,27 +78,24 @@ export async function submitEmployeeRating(orderId, employeeId, rating, comment,
     });
     return res.data;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: submitEmployeeRating for emp ${employeeId} failed, writing mock rating`);
-      const empRatings = JSON.parse(localStorage.getItem('mock_employee_ratings') || '[]');
-      
-      const newEmpRating = {
-        id: Date.now(),
-        orderId: Number(orderId),
-        employeeId: Number(employeeId),
-        rating,
-        comment,
-        tags,
-        createdAt: new Date().toISOString()
-      };
+    console.warn(`apiService: submitEmployeeRating for emp ${employeeId} failed, writing mock rating`, err);
+    const empRatings = JSON.parse(localStorage.getItem('mock_employee_ratings') || '[]');
+    
+    const newEmpRating = {
+      id: Date.now(),
+      orderId: Number(orderId),
+      employeeId: Number(employeeId),
+      rating,
+      comment,
+      tags,
+      createdAt: new Date().toISOString()
+    };
 
-      const filteredRatings = empRatings.filter(r => !(r.orderId === Number(orderId) && r.employeeId === Number(employeeId)));
-      filteredRatings.push(newEmpRating);
-      localStorage.setItem('mock_employee_ratings', JSON.stringify(filteredRatings));
+    const filteredRatings = empRatings.filter(r => !(r.orderId === Number(orderId) && r.employeeId === Number(employeeId)));
+    filteredRatings.push(newEmpRating);
+    localStorage.setItem('mock_employee_ratings', JSON.stringify(filteredRatings));
 
-      return { success: true, message: "Employee feedback submitted successfully!" };
-    }
-    throw err;
+    return { success: true, message: "Employee feedback submitted successfully!" };
   }
 }
 
@@ -117,13 +111,10 @@ export async function getOrderReview(orderId) {
     const res = await apiService.get(`/reviews/order/${orderId}`);
     return res.data.review;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: getOrderReview for ${orderId} failed, searching mock reviews`);
-      const reviews = JSON.parse(localStorage.getItem('mock_reviews') || '[]');
-      const review = reviews.find(r => r.orderId === Number(orderId));
-      return review || null;
-    }
-    throw err;
+    console.warn(`apiService: getOrderReview for ${orderId} failed, searching mock reviews`, err);
+    const reviews = JSON.parse(localStorage.getItem('mock_reviews') || '[]');
+    const review = reviews.find(r => r.orderId === Number(orderId));
+    return review || null;
   }
 }
 

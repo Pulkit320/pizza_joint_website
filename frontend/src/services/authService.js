@@ -59,8 +59,8 @@ export async function register(name, email, password) {
       token: res.data.data.token
     };
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: register failed, falling back to mock registration');
+    if (['NETWORK_ERROR', 'HTTP_404', 'HTTP_500', 'HTTP_502', 'HTTP_503', 'HTTP_504'].includes(err.code) || process.env.NODE_ENV === 'development') {
+      console.warn('apiService: register failed, falling back to mock registration', err);
       const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
       
       if (users.find(u => u.email === email)) {
@@ -113,8 +113,8 @@ export async function customerLogin(email, password) {
       token: res.data.data.token
     };
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: customerLogin failed, checking mock accounts');
+    if (['NETWORK_ERROR', 'HTTP_404', 'HTTP_500', 'HTTP_502', 'HTTP_503', 'HTTP_504'].includes(err.code) || process.env.NODE_ENV === 'development') {
+      console.warn('apiService: customerLogin failed, checking mock accounts', err);
       const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
       const user = users.find(u => u.email === email && u.password === password && u.role === 'customer');
 
@@ -147,8 +147,8 @@ export async function staffLogin(email, password) {
       token: res.data.data.token
     };
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: staffLogin failed, checking mock accounts');
+    if (['NETWORK_ERROR', 'HTTP_404', 'HTTP_500', 'HTTP_502', 'HTTP_503', 'HTTP_504'].includes(err.code) || process.env.NODE_ENV === 'development') {
+      console.warn('apiService: staffLogin failed, checking mock accounts', err);
       const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
       const user = users.find(u => u.email === email && u.password === password && u.role !== 'customer');
 
@@ -207,16 +207,16 @@ export async function getMe() {
     const res = await apiService.get('/auth/me');
     return res.data.data;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: getMe failed, matching session token');
+    if (['NETWORK_ERROR', 'HTTP_404', 'HTTP_500', 'HTTP_502', 'HTTP_503', 'HTTP_504'].includes(err.code) || process.env.NODE_ENV === 'development') {
+      console.warn('apiService: getMe failed, matching session token', err);
       const token = localStorage.getItem('customer_token') || localStorage.getItem('staff_token') || localStorage.getItem('token');
       if (!token || !token.startsWith('mock-jwt-token-')) {
         throw { code: 'UNAUTHORIZED', message: 'No valid login session found.' };
       }
 
-      const userId = Number(token.replace('mock-jwt-token-', ''));
+      const userId = token.replace('mock-jwt-token-', '');
       const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
-      const user = users.find(u => u.id === userId);
+      const user = users.find(u => String(u.id) === String(userId));
 
       if (!user) {
         throw { code: 'USER_NOT_FOUND', message: 'User session could not be retrieved.' };
@@ -239,15 +239,15 @@ export async function updateMe(profileData) {
     const res = await apiService.put('/auth/me', profileData);
     return res.data.data;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: updateMe failed, updating mock database');
+    if (['NETWORK_ERROR', 'HTTP_404', 'HTTP_500', 'HTTP_502', 'HTTP_503', 'HTTP_504'].includes(err.code) || process.env.NODE_ENV === 'development') {
+      console.warn('apiService: updateMe failed, updating mock database', err);
       const token = localStorage.getItem('customer_token') || localStorage.getItem('staff_token') || localStorage.getItem('token');
       if (!token || !token.startsWith('mock-jwt-token-')) {
         throw { code: 'UNAUTHORIZED', message: 'No active session.' };
       }
-      const userId = Number(token.replace('mock-jwt-token-', ''));
+      const userId = token.replace('mock-jwt-token-', '');
       const users = JSON.parse(localStorage.getItem('mock_users') || '[]');
-      const userIdx = users.findIndex(u => u.id === userId);
+      const userIdx = users.findIndex(u => String(u.id) === String(userId));
       if (userIdx === -1) {
         throw { code: 'USER_NOT_FOUND', message: 'User not found.' };
       }

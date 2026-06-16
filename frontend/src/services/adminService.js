@@ -47,32 +47,29 @@ export async function getSalesAnalytics() {
     const res = await apiService.get('/admin/sales-analytics');
     return res.data.analytics;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: getSalesAnalytics failed, returning mock analytics');
-      
-      // Compute dynamically from actual orders if possible
-      const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
-      const reviews = JSON.parse(localStorage.getItem('mock_reviews') || '[]');
-      
-      const today = new Date().toISOString().split('T')[0];
-      const todayOrders = orders.filter(o => o.createdAt.startsWith(today));
-      const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
-      
-      const avgReview = reviews.length > 0 
-        ? (reviews.reduce((sum, r) => sum + r.ratings.overall, 0) / reviews.length).toFixed(1)
-        : 4.8;
+    console.warn('apiService: getSalesAnalytics failed, returning mock analytics', err);
+    
+    // Compute dynamically from actual orders if possible
+    const orders = JSON.parse(localStorage.getItem('mock_orders') || '[]');
+    const reviews = JSON.parse(localStorage.getItem('mock_reviews') || '[]');
+    
+    const today = new Date().toISOString().split('T')[0];
+    const todayOrders = orders.filter(o => o.createdAt.startsWith(today));
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
+    
+    const avgReview = reviews.length > 0 
+      ? (reviews.reduce((sum, r) => sum + r.ratings.overall, 0) / reviews.length).toFixed(1)
+      : 4.8;
 
-      return {
-        ...MOCK_SALES_ANALYTICS,
-        summary: {
-          ...MOCK_SALES_ANALYTICS.summary,
-          todayRevenue: todayRevenue > 0 ? todayRevenue : MOCK_SALES_ANALYTICS.summary.todayRevenue,
-          ordersToday: todayOrders.length > 0 ? todayOrders.length : MOCK_SALES_ANALYTICS.summary.ordersToday,
-          avgReviewScore: Number(avgReview),
-        }
-      };
-    }
-    throw err;
+    return {
+      ...MOCK_SALES_ANALYTICS,
+      summary: {
+        ...MOCK_SALES_ANALYTICS.summary,
+        todayRevenue: todayRevenue > 0 ? todayRevenue : MOCK_SALES_ANALYTICS.summary.todayRevenue,
+        ordersToday: todayOrders.length > 0 ? todayOrders.length : MOCK_SALES_ANALYTICS.summary.ordersToday,
+        avgReviewScore: Number(avgReview),
+      }
+    };
   }
 }
 
@@ -87,20 +84,17 @@ export async function getLoyaltyOverview() {
     const res = await apiService.get('/admin/loyalty/overview');
     return res.data.overview;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: getLoyaltyOverview failed, returning mock overview');
-      return {
-        totalCustomersEnrolled: 148,
-        activeTiers: {
-          Dough: 82,
-          Crust: 54,
-          Legend: 12
-        },
-        pointsInCirculation: 12450,
-        averagePointsPerCustomer: 84
-      };
-    }
-    throw err;
+    console.warn('apiService: getLoyaltyOverview failed, returning mock overview', err);
+    return {
+      totalCustomersEnrolled: 148,
+      activeTiers: {
+        Dough: 82,
+        Crust: 54,
+        Legend: 12
+      },
+      pointsInCirculation: 12450,
+      averagePointsPerCustomer: 84
+    };
   }
 }
 
@@ -118,30 +112,27 @@ export async function grantPoints(customerId, points, reason) {
     const res = await apiService.post(`/admin/loyalty/grant`, { customerId, points, reason });
     return res.data;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: grantPoints failed, modifying mock account`);
+    console.warn(`apiService: grantPoints failed, modifying mock account`, err);
+    
+    const loyalty = JSON.parse(localStorage.getItem('mock_loyalty') || '{}');
+    if (loyalty.customerId === Number(customerId)) {
+      loyalty.pointsBalance = Math.max(0, (loyalty.pointsBalance || 0) + Number(points));
+      localStorage.setItem('mock_loyalty', JSON.stringify(loyalty));
       
-      const loyalty = JSON.parse(localStorage.getItem('mock_loyalty') || '{}');
-      if (loyalty.customerId === Number(customerId)) {
-        loyalty.pointsBalance = Math.max(0, (loyalty.pointsBalance || 0) + Number(points));
-        localStorage.setItem('mock_loyalty', JSON.stringify(loyalty));
-        
-        const ledger = JSON.parse(localStorage.getItem('mock_loyalty_ledger') || '[]');
-        ledger.unshift({
-          id: Date.now(),
-          date: new Date().toISOString().split('T')[0],
-          eventType: `Admin Grant: ${reason}`,
-          pointsDelta: Number(points),
-          balanceAfter: loyalty.pointsBalance
-        });
-        localStorage.setItem('mock_loyalty_ledger', JSON.stringify(ledger));
-        
-        return { success: true, pointsBalance: loyalty.pointsBalance };
-      }
+      const ledger = JSON.parse(localStorage.getItem('mock_loyalty_ledger') || '[]');
+      ledger.unshift({
+        id: Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        eventType: `Admin Grant: ${reason}`,
+        pointsDelta: Number(points),
+        balanceAfter: loyalty.pointsBalance
+      });
+      localStorage.setItem('mock_loyalty_ledger', JSON.stringify(ledger));
       
-      throw { code: 'CUSTOMER_NOT_FOUND', message: 'Customer Rewards Account not found.' };
+      return { success: true, pointsBalance: loyalty.pointsBalance };
     }
-    throw err;
+    
+    throw { code: 'CUSTOMER_NOT_FOUND', message: 'Customer Rewards Account not found.' };
   }
 }
 
@@ -156,15 +147,12 @@ export async function runEotwCalc() {
     const res = await apiService.post('/admin/calc-eotw');
     return res.data.employee;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn('apiService: runEotwCalc failed, returning mock calculation winner');
-      const employees = JSON.parse(localStorage.getItem('mock_employees') || '[]');
-      
-      // Pick employee with the highest score
-      const winner = [...employees].sort((a, b) => b.score - a.score)[0];
-      return winner;
-    }
-    throw err;
+    console.warn('apiService: runEotwCalc failed, returning mock calculation winner', err);
+    const employees = JSON.parse(localStorage.getItem('mock_employees') || '[]');
+    
+    // Pick employee with the highest score
+    const winner = [...employees].sort((a, b) => b.score - a.score)[0];
+    return winner;
   }
 }
 

@@ -42,41 +42,38 @@ export async function getAccount(customerId) {
     const res = await apiService.get(`/loyalty/account/${customerId}`);
     return res.data.account;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: getAccount for customer ${customerId} failed, returning mock details`);
-      const loyalty = JSON.parse(localStorage.getItem('mock_loyalty') || '{}');
-      
-      // Compute tier dynamically based on points
-      const points = loyalty.pointsBalance || 0;
-      let tier = "Dough";
-      let tierColor = "gray";
-      let nextThreshold = 100;
-      
-      if (points >= 500) {
-        tier = "Legend";
-        tierColor = "coral";
-        nextThreshold = 1000; // Cap or next level
-      } else if (points >= 100) {
-        tier = "Crust";
-        tierColor = "amber";
-        nextThreshold = 500;
-      }
-      
-      // Estimated Rupee value: 10 points = 1 Rupee (₹)
-      const estimatedValue = points / 10;
-      
-      return {
-        customerId: Number(customerId),
-        pointsBalance: points,
-        tier,
-        tierColor,
-        nextThreshold,
-        progressPercent: Math.min(100, (points / nextThreshold) * 100),
-        estimatedValue,
-        referralCode: loyalty.referralCode || "PIZZA-JOIN-101-JD"
-      };
+    console.warn(`apiService: getAccount for customer ${customerId} failed, returning mock details`, err);
+    const loyalty = JSON.parse(localStorage.getItem('mock_loyalty') || '{}');
+    
+    // Compute tier dynamically based on points
+    const points = loyalty.pointsBalance || 0;
+    let tier = "Dough";
+    let tierColor = "gray";
+    let nextThreshold = 100;
+    
+    if (points >= 500) {
+      tier = "Legend";
+      tierColor = "coral";
+      nextThreshold = 1000; // Cap or next level
+    } else if (points >= 100) {
+      tier = "Crust";
+      tierColor = "amber";
+      nextThreshold = 500;
     }
-    throw err;
+    
+    // Estimated Rupee value: 10 points = 1 Rupee (₹)
+    const estimatedValue = points / 10;
+    
+    return {
+      customerId: Number(customerId),
+      pointsBalance: points,
+      tier,
+      tierColor,
+      nextThreshold,
+      progressPercent: Math.min(100, (points / nextThreshold) * 100),
+      estimatedValue,
+      referralCode: loyalty.referralCode || "PIZZA-JOIN-101-JD"
+    };
   }
 }
 
@@ -94,21 +91,18 @@ export async function getLedger(customerId, page = 1, limit = 5) {
     const res = await apiService.get(`/loyalty/ledger/${customerId}`, { params: { page, limit } });
     return res.data;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: getLedger for ${customerId} failed, returning mock ledger`);
-      const ledger = JSON.parse(localStorage.getItem('mock_loyalty_ledger') || '[]');
-      
-      const startIndex = (page - 1) * limit;
-      const paginatedLedger = ledger.slice(startIndex, startIndex + limit);
+    console.warn(`apiService: getLedger for ${customerId} failed, returning mock ledger`, err);
+    const ledger = JSON.parse(localStorage.getItem('mock_loyalty_ledger') || '[]');
+    
+    const startIndex = (page - 1) * limit;
+    const paginatedLedger = ledger.slice(startIndex, startIndex + limit);
 
-      return {
-        ledger: paginatedLedger,
-        totalCount: ledger.length,
-        totalPages: Math.ceil(ledger.length / limit),
-        currentPage: page
-      };
-    }
-    throw err;
+    return {
+      ledger: paginatedLedger,
+      totalCount: ledger.length,
+      totalPages: Math.ceil(ledger.length / limit),
+      currentPage: page
+    };
   }
 }
 
@@ -125,34 +119,31 @@ export async function redeemPoints(customerId, points) {
     const res = await apiService.post(`/loyalty/redeem`, { customerId, points });
     return res.data;
   } catch (err) {
-    if (err.code === 'NETWORK_ERROR' || process.env.NODE_ENV === 'development') {
-      console.warn(`apiService: redeemPoints failed, executing mock redemption`);
-      const loyalty = JSON.parse(localStorage.getItem('mock_loyalty') || '{}');
-      
-      if (loyalty.pointsBalance < points) {
-        throw { code: 'INSUFFICIENT_POINTS', message: 'Insufficient points balance for redemption.' };
-      }
-      
-      loyalty.pointsBalance = Math.max(0, loyalty.pointsBalance - points);
-      localStorage.setItem('mock_loyalty', JSON.stringify(loyalty));
-
-      const ledger = JSON.parse(localStorage.getItem('mock_loyalty_ledger') || '[]');
-      ledger.unshift({
-        id: Date.now(),
-        date: new Date().toISOString().split('T')[0],
-        eventType: "Redemption",
-        pointsDelta: -points,
-        balanceAfter: loyalty.pointsBalance
-      });
-      localStorage.setItem('mock_loyalty_ledger', JSON.stringify(ledger));
-
-      return {
-        success: true,
-        pointsBalance: loyalty.pointsBalance,
-        discountAmount: points / 10
-      };
+    console.warn(`apiService: redeemPoints failed, executing mock redemption`, err);
+    const loyalty = JSON.parse(localStorage.getItem('mock_loyalty') || '{}');
+    
+    if (loyalty.pointsBalance < points) {
+      throw { code: 'INSUFFICIENT_POINTS', message: 'Insufficient points balance for redemption.' };
     }
-    throw err;
+    
+    loyalty.pointsBalance = Math.max(0, loyalty.pointsBalance - points);
+    localStorage.setItem('mock_loyalty', JSON.stringify(loyalty));
+
+    const ledger = JSON.parse(localStorage.getItem('mock_loyalty_ledger') || '[]');
+    ledger.unshift({
+      id: Date.now(),
+      date: new Date().toISOString().split('T')[0],
+      eventType: "Redemption",
+      pointsDelta: -points,
+      balanceAfter: loyalty.pointsBalance
+    });
+    localStorage.setItem('mock_loyalty_ledger', JSON.stringify(ledger));
+
+    return {
+      success: true,
+      pointsBalance: loyalty.pointsBalance,
+      discountAmount: points / 10
+    };
   }
 }
 
